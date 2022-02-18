@@ -34,6 +34,7 @@ public class RomiDrivetrainSubsystem extends SubsystemBase {
     resetEncoders();
 
     // Invert right side since motor is flipped
+    m_leftMotor.setInverted(false); 
     m_rightMotor.setInverted(true);
   }
 

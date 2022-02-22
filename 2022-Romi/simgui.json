@@ -1,0 +1,19 @@
+{
+  "NTProvider": {
+    "types": {
+      "/FMSInfo": "FMSInfo",
+      "/LiveWindow/RomiDrivetrainSubsystem": "Subsystem",
+      "/LiveWindow/Ungrouped/DifferentialDrive[1]": "DifferentialDrive",
+      "/LiveWindow/Ungrouped/Scheduler": "Scheduler",
+      "/SmartDashboard/field": "Field2d"
+    }
+  },
+  "NetworkTables": {
+    "SmartDashboard": {
+      "field": {
+        "open": true
+      },
+      "open": true
+    }
+  }
+}

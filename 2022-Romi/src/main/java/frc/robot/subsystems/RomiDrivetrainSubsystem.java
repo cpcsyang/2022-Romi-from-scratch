@@ -4,9 +4,15 @@
 
 package frc.robot.subsystems;
 
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
+import edu.wpi.first.wpilibj.BuiltInAccelerometer;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
+import edu.wpi.first.wpilibj.romi.RomiGyro;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class RomiDrivetrainSubsystem extends SubsystemBase {
@@ -25,17 +31,45 @@ public class RomiDrivetrainSubsystem extends SubsystemBase {
 
   // Set up the differential drive controller
   private final DifferentialDrive m_diffDrive = new DifferentialDrive(m_leftMotor, m_rightMotor);
+  
+  // Set up the RomiGyro
+  private final RomiGyro m_gyro;
+
+  // Set up the BuiltInAccelerometer
+  @SuppressWarnings("unused")
+  private final BuiltInAccelerometer m_accelerometer; 
+
+  // ChasisSpeeds class for tracking robot speeds
+  @SuppressWarnings("unused")
+  private final ChassisSpeeds m_chassisSpeeds;
+
+  // Odometry class for tracking robot pose
+  @SuppressWarnings("unused")
+  private final DifferentialDriveOdometry m_odometry;
+
+  // Also show a field diagram on SmartDashboard
+  private final Field2d m_field2d;
 
   /** Creates a new RomiDrivetrain. */
   public RomiDrivetrainSubsystem() {
     // Use inches as unit for encoder distances
     m_leftEncoder.setDistancePerPulse((Math.PI * kWheelDiameterInch) / kCountsPerRevolution);
     m_rightEncoder.setDistancePerPulse((Math.PI * kWheelDiameterInch) / kCountsPerRevolution);
-    resetEncoders();
 
     // Invert right side since motor is flipped
     m_leftMotor.setInverted(false); 
     m_rightMotor.setInverted(true);
+
+    // set up odometry 
+    m_gyro = new RomiGyro();
+    m_accelerometer = new BuiltInAccelerometer(); 
+    m_chassisSpeeds = new ChassisSpeeds();
+    m_odometry = new DifferentialDriveOdometry(m_gyro.getRotation2d());
+
+    resetEncoders();
+
+    m_field2d = new Field2d();
+    SmartDashboard.putData("field", m_field2d);
   }
 
   public void arcadeDrive(double xaxisSpeed, double zaxisRotate) {

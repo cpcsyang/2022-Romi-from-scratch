@@ -19,7 +19,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   // @SuppressWarnings("unused")
-  private final XboxController m_controller
+  private final XboxController m_controller;
   private final RomiDrivetrainSubsystem m_romiDrivetrain;;
   // @SuppressWarnings("unused")
   private final AutoDriveCommand m_autoCommand;

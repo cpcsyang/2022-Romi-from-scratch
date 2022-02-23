@@ -5,10 +5,14 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.romi.OnBoardIO;
+import edu.wpi.first.wpilibj.romi.OnBoardIO.ChannelMode;
 import frc.robot.commands.AutoDriveCommand;
 import frc.robot.commands.ArcadeDriveCommand;
 import frc.robot.subsystems.RomiDrivetrainSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.PrintCommand;
+import edu.wpi.first.wpilibj2.command.button.Button;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -18,9 +22,9 @@ import edu.wpi.first.wpilibj2.command.Command;
  */
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
-  // @SuppressWarnings("unused")
   private final XboxController m_controller;
-  private final RomiDrivetrainSubsystem m_romiDrivetrain;;
+  private final RomiDrivetrainSubsystem m_romiDrivetrain;
+  private final OnBoardIO m_onBoardIO;
   // @SuppressWarnings("unused")
   private final AutoDriveCommand m_autoCommand;
 
@@ -38,6 +42,9 @@ public class RobotContainer {
     // set default command for all subsystems
     m_romiDrivetrain.setDefaultCommand(getArcadeDriveCommand());
 
+    // Romi OnBoardIO
+    m_onBoardIO = new OnBoardIO(ChannelMode.INPUT, ChannelMode.INPUT);
+    
     // Configure the button bindings
     configureButtonBindings();
   }
@@ -48,7 +55,20 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a {@link
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
-  private void configureButtonBindings() {}
+  private void configureButtonBindings() {
+    Button onBoardButtonA = new Button(m_onBoardIO::getButtonAPressed);
+    onBoardButtonA
+        .whenActive(new PrintCommand("Romi Buton A Pressed"))
+        .whenInactive(new PrintCommand("Romi Buton A Released"));
+    Button onBoardButtonB = new Button(m_onBoardIO::getButtonBPressed);
+    onBoardButtonB
+        .whenActive(new PrintCommand("Romi Buton B Pressed"))
+        .whenInactive(new PrintCommand("Romi Buton B Released"));
+    Button onBoardButtonC = new Button(m_onBoardIO::getButtonCPressed);
+    onBoardButtonC
+        .whenActive(new PrintCommand("Romi Buton C Pressed"))
+        .whenInactive(new PrintCommand("Romi Buton C Released"));
+      }
 
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.

@@ -7,7 +7,7 @@ package frc.robot.commands;
 import frc.robot.subsystems.RomiDrivetrainSubsystem;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 
-public class AutoTimeCG extends SequentialCommandGroup {
+public class CG_AutoTime extends SequentialCommandGroup {
   /**
    * Creates a new Autonomous Drive based on time. This will drive out for a period of time, turn
    * around for time (equivalent to time to turn around) and drive forward again. This should mimic
@@ -15,7 +15,7 @@ public class AutoTimeCG extends SequentialCommandGroup {
    *
    * @param drivetrain The drive subsystem on which this command will run
    */
-  public AutoTimeCG(RomiDrivetrainSubsystem drivetrain) {
+  public CG_AutoTime(RomiDrivetrainSubsystem drivetrain) {
     addCommands(
         new DriveTime(-0.6, 2.0, drivetrain),
         new TurnTime(-0.5, 1.3, drivetrain),

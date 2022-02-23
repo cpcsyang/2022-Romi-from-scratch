@@ -28,7 +28,7 @@ public class TurnTime extends CommandBase {
     m_rotationalSpeed = speed;
     m_duration = time * 1000;
     m_drivetrain = drivetrain;
-    addRequirements(drivetrain);
+    addRequirements(m_drivetrain);
   }
 
   // Called when the command is initially scheduled.

@@ -22,9 +22,11 @@ import edu.wpi.first.wpilibj.romi.OnBoardIO;
 import edu.wpi.first.wpilibj.romi.OnBoardIO.ChannelMode;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.commands.AutoTimeCG;
+import frc.robot.commands.CG_AutoTime;
+import frc.robot.commands.DriveDistance;
+import frc.robot.commands.TurnDegrees;
 import frc.robot.commands.ArcadeDriveCommand;
-import frc.robot.commands.AutoDistanceCG;
+import frc.robot.commands.CG_AutoDistance;
 import frc.robot.subsystems.RomiDrivetrainSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -96,8 +98,8 @@ public class RobotContainer {
     
     // Setup SmartDashboard options
     m_chooser.setDefaultOption("Ramsete Trajectory", generateRamseteCommand());
-    m_chooser.addOption("Auto Routine Distance", new AutoDistanceCG(m_romiDrivetrain));
-    m_chooser.addOption("Auto Routine Time", new AutoTimeCG(m_romiDrivetrain));
+    m_chooser.addOption("Auto Routine Distance", new CG_AutoDistance(m_romiDrivetrain));
+    m_chooser.addOption("Auto Routine Time", new CG_AutoTime(m_romiDrivetrain));
 
     SmartDashboard.putData(m_chooser);
   }
@@ -182,7 +184,13 @@ public class RobotContainer {
     onBoardButtonC
         .whenActive(new PrintCommand("Romi Buton C Pressed"))
         .whenInactive(new PrintCommand("Romi Buton C Released"));
-      }
+    
+    new Button(m_controller::getAButton).whenActive(new DriveDistance(0.5, 10, m_romiDrivetrain));
+    new Button(m_controller::getBButton).whenActive(new DriveDistance(-0.5, 10, m_romiDrivetrain));
+    new Button(m_controller::getXButton).whenActive(new TurnDegrees(0.5, 90, m_romiDrivetrain));
+    new Button(m_controller::getYButton).whenActive(new TurnDegrees(-0.5, 90, m_romiDrivetrain));
+
+  }
 
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.

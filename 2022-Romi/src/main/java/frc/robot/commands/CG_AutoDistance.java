@@ -8,18 +8,18 @@ package frc.robot.commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.RomiDrivetrainSubsystem;
 
-public class AutoDistanceCG extends SequentialCommandGroup {
+public class CG_AutoDistance extends SequentialCommandGroup {
   /**
    * Creates a new Autonomous Drive based on distance. This will drive out for a specified distance,
    * turn around and drive back.
    *
    * @param drivetrain The drivetrain subsystem on which this command will run
    */
-  public AutoDistanceCG(RomiDrivetrainSubsystem drivetrain) {
+  public CG_AutoDistance(RomiDrivetrainSubsystem drivetrain) {
     addCommands(
-        new DriveDistance(0.8, 18, drivetrain),
-        new TurnDegrees(0.5, 180, drivetrain),
-        new DriveDistance(-0.5, 10, drivetrain),
-        new TurnDegrees(0.5, 180, drivetrain));
+        new DriveDistance(0.5, 10, drivetrain),
+        new TurnDegrees(0.3, 180, drivetrain),
+        new DriveDistance(0.5, 10, drivetrain),
+        new TurnDegrees(0.3, 180, drivetrain));
   }
 }

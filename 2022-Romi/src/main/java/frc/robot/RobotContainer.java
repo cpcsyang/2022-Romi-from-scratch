@@ -4,14 +4,32 @@
 
 package frc.robot;
 
+import java.util.List;
+
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.RamseteController;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
+import edu.wpi.first.math.trajectory.Trajectory;
+import edu.wpi.first.math.trajectory.TrajectoryConfig;
+import edu.wpi.first.math.trajectory.TrajectoryGenerator;
+import edu.wpi.first.math.trajectory.constraint.DifferentialDriveVoltageConstraint;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.romi.OnBoardIO;
 import edu.wpi.first.wpilibj.romi.OnBoardIO.ChannelMode;
-import frc.robot.commands.AutoDriveCommand;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.commands.AutoTimeCG;
 import frc.robot.commands.ArcadeDriveCommand;
+import frc.robot.commands.AutoDistanceCG;
 import frc.robot.subsystems.RomiDrivetrainSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
+import edu.wpi.first.wpilibj2.command.RamseteCommand;
 import edu.wpi.first.wpilibj2.command.button.Button;
 
 /**
@@ -21,33 +39,129 @@ import edu.wpi.first.wpilibj2.command.button.Button;
  * subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
+  // drivetrain constants
+  public static final double ksVolts = 0.929;
+  public static final double kvVoltSecondsPerMeter = 6.33;
+  public static final double kaVoltSecondsSquaredPerMeter = 0.0389;
+  public static final double kPDriveVel = 0.085;
+  public static final double kTrackwidthMeters = 0.142072613;
+  public static final DifferentialDriveKinematics kDriveKinematics = new DifferentialDriveKinematics(kTrackwidthMeters);
+  // autonomous constants
+  public static final double kMaxSpeedMetersPerSecond = 0.8;
+  public static final double kMaxAccelerationMetersPerSecondSquared = 0.8;
+  // reasonable baseline values for a RAMSETE follower in units of meters and seconds
+  public static final double kRamseteB = 2;
+  public static final double kRamseteZeta = 0.7;
+
   // The robot's subsystems and commands are defined here...
   private final XboxController m_controller;
   private final RomiDrivetrainSubsystem m_romiDrivetrain;
+  // Romi OnBoardIO
   private final OnBoardIO m_onBoardIO;
-  // @SuppressWarnings("unused")
-  private final AutoDriveCommand m_autoCommand;
+  // Create SmartDashboard chooser for autonomous routines
+  private final SendableChooser<Command> m_chooser;
+    
+  // NOTE: The I/O pin functionality of the 5 exposed I/O pins depends on the hardware "overlay"
+  // that is specified when launching the wpilib-ws server on the Romi raspberry pi.
+  // By default, the following are available (listed in order from inside of the board to outside):
+  // - DIO 8 (mapped to Arduino pin 11, closest to the inside of the board)
+  // - Analog In 0 (mapped to Analog Channel 6 / Arduino Pin 4)
+  // - Analog In 1 (mapped to Analog Channel 2 / Arduino Pin 20)
+  // - PWM 2 (mapped to Arduino Pin 21)
+  // - PWM 3 (mapped to Arduino Pin 22)
+  //
+  // Your subsystem configuration should take the overlays into account
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     // initialize controller objects
     m_controller = new XboxController(0);
-
     // initialize subsystems objects
     m_romiDrivetrain = new RomiDrivetrainSubsystem();
-
     // initialize commands objects
-    m_autoCommand = new AutoDriveCommand(m_romiDrivetrain);
-
+    
+    // Romi OnBoardIO
+    m_onBoardIO = new OnBoardIO(ChannelMode.INPUT, ChannelMode.INPUT);
+    // Create SmartDashboard chooser for autonomous routines
+    m_chooser = new SendableChooser<>();
+    
     // set default command for all subsystems
     m_romiDrivetrain.setDefaultCommand(getArcadeDriveCommand());
 
-    // Romi OnBoardIO
-    m_onBoardIO = new OnBoardIO(ChannelMode.INPUT, ChannelMode.INPUT);
-    
     // Configure the button bindings
     configureButtonBindings();
+
+    // create Autonomous Command
+    generateRamseteCommand();
+    
+    // Setup SmartDashboard options
+    m_chooser.setDefaultOption("Ramsete Trajectory", generateRamseteCommand());
+    m_chooser.addOption("Auto Routine Distance", new AutoDistanceCG(m_romiDrivetrain));
+    m_chooser.addOption("Auto Routine Time", new AutoTimeCG(m_romiDrivetrain));
+
+    SmartDashboard.putData(m_chooser);
   }
+
+
+  /**
+   * Generate a trajectory following Ramsete command
+   *
+   * This is very similar to the WPILib RamseteCommand example. It uses
+   * constants defined in the Constants.java file. These constants were
+   * found empirically by using the frc-characterization tool.
+   *
+   * @return A SequentialCommand that sets up and executes a trajectory following Ramsete command
+   */
+  private Command generateRamseteCommand() {
+    var autoVoltageConstraint =
+        new DifferentialDriveVoltageConstraint(
+            new SimpleMotorFeedforward(ksVolts, kvVoltSecondsPerMeter, kaVoltSecondsSquaredPerMeter),
+            kDriveKinematics, 10);
+
+    TrajectoryConfig config =
+        new TrajectoryConfig(kMaxSpeedMetersPerSecond, kMaxAccelerationMetersPerSecondSquared)
+                .setKinematics(kDriveKinematics)
+                .addConstraint(autoVoltageConstraint);
+    
+    // This trajectory can be modified to suit your purposes
+    // Note that all coordinates are in meters, and follow NWU conventions.
+    // If you would like to specify coordinates in inches (which might be easier
+    // to deal with for the Romi), you can use the Units.inchesToMeters() method
+    Trajectory exampleTrajectory = TrajectoryGenerator.generateTrajectory(
+        // Start at the origin facing the +X direction
+        new Pose2d(0, 0, new Rotation2d(0)),
+        List.of(
+            new Translation2d(0.5, 0.25),
+            new Translation2d(1.0, -0.25),
+            new Translation2d(1.5, 0)
+        ),
+        new Pose2d(0.0, 0, new Rotation2d(Math.PI)),
+        config);
+
+    RamseteCommand ramseteCommand = new RamseteCommand(
+        exampleTrajectory,
+        m_romiDrivetrain::getPose,
+        new RamseteController(kRamseteB, kRamseteZeta),
+        new SimpleMotorFeedforward(ksVolts, kvVoltSecondsPerMeter, kaVoltSecondsSquaredPerMeter),
+        kDriveKinematics,
+        m_romiDrivetrain::getWheelSpeeds,
+        new PIDController(kPDriveVel, 0, 0),
+        new PIDController(kPDriveVel, 0, 0),
+        m_romiDrivetrain::tankDriveVolts,
+        m_romiDrivetrain);
+
+    m_romiDrivetrain.resetOdometry(exampleTrajectory.getInitialPose());
+
+    // Set up a sequence of commands
+    // First, we want to reset the drivetrain odometry
+    return new InstantCommand(() -> m_romiDrivetrain.resetOdometry(exampleTrajectory.getInitialPose()), m_romiDrivetrain)
+        // next, we run the actual ramsete command
+        .andThen(ramseteCommand)
+
+        // Finally, we make sure that the robot stops
+        .andThen(new InstantCommand(() -> m_romiDrivetrain.tankDriveVolts(0, 0), m_romiDrivetrain));
+  }
+
 
   /**
    * Use this method to define your button->command mappings. Buttons can be created by
@@ -76,8 +190,7 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    // An ExampleCommand will run in autonomous
-    return m_autoCommand;
+    return m_chooser.getSelected();
   }
 
   public Command getArcadeDriveCommand() {

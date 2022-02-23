@@ -189,7 +189,6 @@ public class RobotContainer {
     new Button(m_controller::getBButton).whenActive(new DriveDistance(-0.5, 10, m_romiDrivetrain));
     new Button(m_controller::getXButton).whenActive(new TurnDegrees(0.5, 90, m_romiDrivetrain));
     new Button(m_controller::getYButton).whenActive(new TurnDegrees(-0.5, 90, m_romiDrivetrain));
-
   }
 
   /**
@@ -203,6 +202,6 @@ public class RobotContainer {
 
   public Command getArcadeDriveCommand() {
     return new ArcadeDriveCommand(    // 1 is Left-Y-Axis; negate stick-Y-axis   // 4 is Right-X-Axis
-      m_romiDrivetrain, () -> -m_controller.getRawAxis(1),  () -> m_controller.getRawAxis(4));
+      m_romiDrivetrain, () -> -m_controller.getRawAxis(1),  () -> m_controller.getRawAxis(4) * 0.8);
   }
 }
